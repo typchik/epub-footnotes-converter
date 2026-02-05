@@ -165,23 +165,23 @@
         </div>
         
         <div class="description">
-            <p>Многие электронные книги содержат ссылки на&nbsp;примечания в&nbsp;конце книги&nbsp;— [1], [2] и&nbsp;так далее.</p>
-            <p>На&nbsp;читалках без сенсорного экрана неудобно переходить по&nbsp;этим ссылкам и&nbsp;возвращаться обратно к&nbsp;тексту.</p>
-            <p>Этот сервис автоматически добавляет текст каждого примечания прямо в&nbsp;книгу, рядом с&nbsp;цифрой-ссылкой.</p>
+            <p id="desc1"></p>
+            <p id="desc2"></p>
+            <p id="desc3"></p>
         </div>
 
         <div class="example">
-            <div class="example-label">Было</div>
-            <div class="example-text">...в&nbsp;Перу[1] сплели мост...</div>
+            <div class="example-label" id="labelBefore"></div>
+            <div class="example-text" id="exampleBefore"></div>
         </div>
 
         <div class="example">
-            <div class="example-label">Стало</div>
-            <div class="example-text">...в&nbsp;Перу[1] <i>[страна в&nbsp;Южной Америке]</i> сплели мост...</div>
+            <div class="example-label" id="labelAfter"></div>
+            <div class="example-text" id="exampleAfter"></div>
         </div>
 
         <div class="description">
-            <p>Загрузите EPUB файл, и&nbsp;получите новый файл, в&nbsp;котором все примечания встроены в&nbsp;текст курсивом в&nbsp;квадратных скобках.</p>
+            <p id="desc4"></p>
         </div>
 
         <button class="upload-button" id="uploadButton">Загрузить</button>
@@ -191,12 +191,83 @@
     </div>
 
     <script>
+        // Локализация
+        const translations = {
+            ru: {
+                description1: 'Многие электронные книги содержат ссылки на\u00A0примечания в\u00A0конце книги\u00A0— [1], [2] и\u00A0так далее.',
+                description2: 'На\u00A0читалках без сенсорного экрана неудобно переходить по\u00A0этим ссылкам и\u00A0возвращаться обратно к\u00A0тексту.',
+                description3: 'Этот сервис автоматически добавляет текст каждого примечания прямо в\u00A0книгу, рядом с\u00A0цифрой-ссылкой.',
+                labelBefore: 'Было',
+                exampleBefore: '...в\u00A0Перу[1] сплели мост...',
+                labelAfter: 'Стало',
+                exampleAfter: '...в\u00A0Перу[1] <i>[страна в\u00A0Южной Америке]</i> сплели мост...',
+                description4: 'Загрузите EPUB файл, и\u00A0получите новый файл, в\u00A0котором все примечания встроены в\u00A0текст курсивом в\u00A0квадратных скобках.',
+                btnUpload: 'Загрузить',
+                btnDownload: 'Скачать',
+                btnProcessing: 'Обработка...',
+                statusProcessing: 'Обработка файла...',
+                statusSearching: 'Поиск примечаний...',
+                statusFound: 'Найдено {count} примечаний',
+                statusCreating: 'Создание файла...',
+                statusDone: 'Готово! Обработано {count} ссылок',
+                statusDownloaded: 'Файл скачан',
+                errorFormat: 'Только EPUB файлы',
+                errorGeneric: 'Ошибка: {message}'
+            },
+            en: {
+                description1: 'Many ebooks contain links to\u00A0endnotes at\u00A0the end of\u00A0the book\u00A0— [1], [2] and\u00A0so\u00A0on.',
+                description2: 'On\u00A0e-readers without touchscreens, it\u00A0is\u00A0inconvenient to\u00A0follow these links and\u00A0return back to\u00A0the text.',
+                description3: 'This service automatically adds the text of\u00A0each note directly into the book, next to\u00A0the reference number.',
+                labelBefore: 'Before',
+                exampleBefore: '...in\u00A0Peru[1] they built a\u00A0bridge...',
+                labelAfter: 'After',
+                exampleAfter: '...in\u00A0Peru[1] <i>[a country in\u00A0South America]</i> they built a\u00A0bridge...',
+                description4: 'Upload an\u00A0EPUB file and\u00A0get a\u00A0new file with all notes embedded in\u00A0the text in\u00A0italics within square brackets.',
+                btnUpload: 'Upload',
+                btnDownload: 'Download',
+                btnProcessing: 'Processing...',
+                statusProcessing: 'Processing file...',
+                statusSearching: 'Searching for notes...',
+                statusFound: 'Found {count} notes',
+                statusCreating: 'Creating file...',
+                statusDone: 'Done! Processed {count} links',
+                statusDownloaded: 'File downloaded',
+                errorFormat: 'EPUB files only',
+                errorGeneric: 'Error: {message}'
+            }
+        };
+
+        // Определение языка
+        function detectLanguage() {
+            const userLang = navigator.language || navigator.userLanguage;
+            return userLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+        }
+
+        const currentLang = detectLanguage();
+        const t = translations[currentLang];
+
+        // Применение переводов
+        function applyTranslations() {
+            document.getElementById('desc1').innerHTML = t.description1;
+            document.getElementById('desc2').innerHTML = t.description2;
+            document.getElementById('desc3').innerHTML = t.description3;
+            document.getElementById('labelBefore').textContent = t.labelBefore;
+            document.getElementById('exampleBefore').innerHTML = t.exampleBefore;
+            document.getElementById('labelAfter').textContent = t.labelAfter;
+            document.getElementById('exampleAfter').innerHTML = t.exampleAfter;
+            document.getElementById('desc4').innerHTML = t.description4;
+            uploadButton.textContent = t.btnUpload;
+        }
+
         const uploadButton = document.getElementById('uploadButton');
         const fileInput = document.getElementById('fileInput');
         const statusContainer = document.getElementById('statusContainer');
         const globalFootnotes = new Map();
         let processedBlob = null;
         let originalFilename = '';
+
+        // Применяем переводы при загрузке
+        applyTranslations();
 
         uploadButton.addEventListener('click', () => {
             if (processedBlob) {
@@ -246,7 +317,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            showStatus('Файл скачан');
+            showStatus(t.statusDownloaded);
         }
 
         function showStatus(message, type = '') {
@@ -264,14 +335,14 @@
 
         async function handleFile(file) {
             if (!file.name.endsWith('.epub')) {
-                showStatus('Только EPUB файлы', 'error');
+                showStatus(t.errorFormat, 'error');
                 return;
             }
 
             originalFilename = file.name;
-            uploadButton.textContent = 'Обработка...';
+            uploadButton.textContent = t.btnProcessing;
             uploadButton.classList.add('processing');
-            showStatus('Обработка файла...');
+            showStatus(t.statusProcessing);
 
             try {
                 const zip = await JSZip.loadAsync(file);
@@ -290,7 +361,7 @@
                     }
                 });
                 
-                showStatus('Поиск примечаний...');
+                showStatus(t.statusSearching);
                 
                 const allFiles = [];
                 zip.forEach((relativePath, zipEntry) => {
@@ -310,7 +381,7 @@
                     }
                 }
                 
-                showStatus(`Найдено ${globalFootnotes.size} примечаний`);
+                showStatus(t.statusFound.replace('{count}', globalFootnotes.size));
                 
                 let totalReplacements = 0;
                 
@@ -325,23 +396,23 @@
                     }
                 }
                 
-                showStatus('Создание файла...');
+                showStatus(t.statusCreating);
                 
                 processedBlob = await modifiedZip.generateAsync({ 
                     type: 'blob',
                     mimeType: 'application/epub+zip'
                 });
                 
-                uploadButton.textContent = 'Скачать';
+                uploadButton.textContent = t.btnDownload;
                 uploadButton.classList.remove('processing');
-                showStatus(`Готово! Обработано ${totalReplacements} ссылок`);
+                showStatus(t.statusDone.replace('{count}', totalReplacements));
                 
             } catch (error) {
                 console.error('Error:', error);
-                uploadButton.textContent = 'Загрузить';
+                uploadButton.textContent = t.btnUpload;
                 uploadButton.classList.remove('processing');
                 processedBlob = null;
-                showStatus(`Ошибка: ${error.message}`, 'error');
+                showStatus(t.errorGeneric.replace('{message}', error.message), 'error');
             }
         }
 
