@@ -493,8 +493,9 @@
                 const id = match[1];
                 const content = match[2];
                 
-                // Ищем текст после </div>
-                const textMatch = content.match(/<\/div>([\s\S]*?)$/i);
+                // Ищем текст после </div> до следующего <span или конца
+                // Берем только контент между </div> и следующим тегом
+                const textMatch = content.match(/<\/div>\s*(<p[^>]*>[\s\S]*?<\/p>)/i);
                 if (textMatch) {
                     let text = stripHtmlTags(textMatch[1]);
                     text = text.replace(/^\s*\d+\s*\.?\s*/, '').trim();
@@ -573,6 +574,13 @@
                 
                 if (numberMatch) {
                     footnoteNumber = numberMatch[1];
+                }
+                
+                // Проверяем не римская ли цифра (I, II, III, IV, V и т.д.) - это главы
+                const romanMatch = content.match(/<div[^>]*>[\s\S]*?<p[^>]*>\s*([IVXLCDM]+)\s*<\/p>/i);
+                if (romanMatch) {
+                    // Это глава, а не сноска - пропускаем
+                    return;
                 }
                 
                 // Извлекаем текст после </div>
